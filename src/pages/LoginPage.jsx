@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginHighlights } from '../data/setup.js'
+import { fetchJson } from '../lib/api.js'
+import { readSession, saveSession } from '../lib/session.js'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -10,6 +12,40 @@ export function LoginPage() {
     password: '123456',
     nfc: 'CARD-0148',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [notice, setNotice] = useState(null)
+  const [bootstrap, setBootstrap] = useState(null)
+
+  useEffect(() => {
+    const existingSession = readSession()
+
+    if (existingSession?.user) {
+      navigate('/dashboard')
+      return undefined
+    }
+
+    let cancelled = false
+
+    async function loadBootstrap() {
+      try {
+        const data = await fetchJson('/api/auth/bootstrap')
+
+        if (!cancelled) {
+          setBootstrap(data)
+        }
+      } catch {
+        if (!cancelled) {
+          setBootstrap(null)
+        }
+      }
+    }
+
+    void loadBootstrap()
+
+    return () => {
+      cancelled = true
+    }
+  }, [navigate])
 
   function handleChange(field) {
     return (event) => {
@@ -20,9 +56,43 @@ export function LoginPage() {
     }
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    navigate('/dashboard')
+    setIsSubmitting(true)
+    setNotice(null)
+
+    const payload =
+      method === 'nfc'
+        ? {
+            method: 'nfc',
+            nfc: form.nfc,
+          }
+        : {
+            method: 'user',
+            username: form.username,
+            password: form.password,
+          }
+
+    try {
+      const data = await fetchJson('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+ 
+      saveSession(data)
+      navigate('/dashboard')
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        title: 'تعذر تسجيل الدخول',
+        message: error instanceof Error ? error.message : 'حدث خطأ غير متوقع.',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -32,7 +102,8 @@ export function LoginPage() {
           <p className="page-header-eyebrow">تسجيل الدخول</p>
           <h1 className="page-title">دخول عبر NFC أو اسم المستخدم</h1>
           <p className="page-description">
-            واجهة أولية لتسجيل الدخول إلى برنامج POS مع دعم الدخول السريع للكاشير.
+            شاشة دخول مرتبطة بالـ API الفعلية. بعد تجهيز SQL Server وتشغيل
+            `db:push` و`db:seed` ستعمل ببيانات حقيقية.
           </p>
         </div>
 
@@ -88,14 +159,27 @@ export function LoginPage() {
             </>
           )}
 
-          <button className="primary-button primary-button-wide" type="submit">
-            الدخول إلى النظام
+          <button className="primary-button primary-button-wide" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'جارٍ التحقق...' : 'الدخول إلى النظام'}
           </button>
         </form>
 
+        {notice ? (
+          <div className={`notice-card notice-card-${notice.tone}`}>
+            <strong>{notice.title}</strong>
+            <p>{notice.message}</p>
+          </div>
+        ) : null}
+
         <div className="login-note">
-          <strong>وضع تجريبي</strong>
-          <p>بضغطة واحدة سيتم نقلك إلى الداشبورد لمراجعة كل صفحات النظام.</p>
+          <strong>بيانات تجريبية بعد التهيئة</strong>
+          {bootstrap ? (
+            <p>
+              `cashier01 / 123456` أو بطاقة `CARD-0148`
+            </p>
+          ) : (
+            <p>شغّل قاعدة البيانات ثم نفذ `npm run db:push` و `npm run db:seed`.</p>
+          )}
         </div>
       </section>
 
@@ -119,16 +203,16 @@ export function LoginPage() {
 
         <div className="hero-stats">
           <article className="hero-stat">
-            <span>24</span>
-            <p>صفحة تشغيلية داخل النسخة الحالية</p>
+            <span>SQL Server</span>
+            <p>مصمم للعمل على SQL Server Express في النسخة المجانية.</p>
           </article>
           <article className="hero-stat">
-            <span>RTL</span>
-            <p>واجهة عربية مناسبة للكاشير والإدارة</p>
+            <span>المرفقات</span>
+            <p>الصور تحفظ في مجلد خارجي لتقليل استهلاك قاعدة البيانات.</p>
           </article>
           <article className="hero-stat">
-            <span>Node + React</span>
-            <p>مبني بجافاسكربت مع Vite و React Router</p>
+            <span>Seed جاهز</span>
+            <p>يوجد مستخدم مدير وكاشير وبطاقة NFC افتراضية للاختبار.</p>
           </article>
         </div>
       </section>

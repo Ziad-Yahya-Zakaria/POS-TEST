@@ -284,6 +284,14 @@
   font-weight: 700;
 }
 
+.primary-button:disabled,
+.ghost-button:disabled,
+.chip-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
 .ghost-button,
 .chip-button {
   background: rgba(255, 255, 255, 0.6);
@@ -579,6 +587,12 @@
   border-color: rgba(116, 86, 58, 0.14);
 }
 
+.product-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
 .product-topline,
 .product-footer {
   display: flex;
@@ -771,6 +785,88 @@
   color: var(--surface-contrast);
 }
 
+.notice-card {
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(116, 86, 58, 0.14);
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.notice-card strong {
+  color: var(--surface-contrast);
+}
+
+.notice-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.notice-card-error {
+  border-color: rgba(193, 75, 66, 0.24);
+  background: rgba(193, 75, 66, 0.1);
+}
+
+.notice-card-success {
+  border-color: rgba(31, 138, 96, 0.24);
+  background: rgba(31, 138, 96, 0.1);
+}
+
+.inline-status {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--surface-contrast);
+  font-weight: 700;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+}
+
+.entity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entity-card {
+  border: 1px solid rgba(116, 86, 58, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 14px;
+}
+
+.entity-card p {
+  margin: 8px 0;
+  color: var(--muted);
+}
+
+.entity-topline,
+.entity-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entity-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
 .login-note p,
 .hero-stat p {
   margin: 6px 0 0;
@@ -913,7 +1009,8 @@
   .hero-stats,
   .support-checks,
   .module-list,
-  .method-switch {
+  .method-switch,
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

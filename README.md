@@ -1,16 +1,47 @@
-# React + Vite
+# Nawa POS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+بداية عملية لمشروع POS مبني بـ `React + Node.js` مع تجهيز قاعدة البيانات على `SQL Server` وتخزين الصور في مجلد خارجي اسمه `المرفقات`.
 
-Currently, two official plugins are available:
+## قاعدة البيانات
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- المحرك المستهدف: `SQL Server`
+- النسخة المناسبة المجانية: `SQL Server Express`
+- ORM: `Prisma`
+- ملف الـ schema: `prisma/schema.prisma`
 
-## React Compiler
+### الإعداد
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. انسخ `.env.example` إلى `.env`
+2. عدل قيمة `DATABASE_URL` بما يناسب جهازك أو السيرفر
+3. شغل:
 
-## Expanding the ESLint configuration
+```bash
+npm run db:generate
+npm run db:push
+npm run db:seed
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## الصور والمرفقات
+
+- أي صور أو ملفات للبرنامج يتم تخزينها داخل مجلد `المرفقات`
+- قاعدة البيانات تخزن `metadata + relativePath` فقط
+- الرفع يتم عبر `POST /api/attachments`
+
+## أوامر التشغيل
+
+```bash
+npm run server
+npm run dev
+```
+
+## ملاحظات مهمة
+
+- الخادم الحالي فيه تجهيز SQL Server والمرفقات، لكن باقي وحدات النظام ما زالت في مرحلة بناء تدريجي.
+- الهدف من هذا التعديل هو تثبيت اتجاه الإنتاج الصحيح: `SQL Server + filesystem attachments`.
+- بيانات الدخول الافتراضية بعد الـ seed:
+
+```text
+admin / Admin@123
+cashier01 / 123456
+NFC: CARD-0148
+```

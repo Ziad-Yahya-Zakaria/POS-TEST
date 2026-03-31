@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Branch {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  name          String
+  phone         String?
+  address       String?
+  isHeadOffice  Boolean      @default(false)
+  employees     Employee[]
+  users         User[]
+  products      Product[]
+  salesInvoices SalesInvoice[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Employee {
+  id              String         @id @default(uuid())
+  employeeCode    String         @unique
+  firstName       String
+  lastName        String
+  phone           String?
+  status          String         @default("ACTIVE")
+  nfcCardCode     String?        @unique
+  branchId        String
+  branch          Branch         @relation(fields: [branchId], references: [id])
+  user            User?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model User {
+  id               String      @id @default(uuid())
+  username         String      @unique
+  passwordHash     String
+  displayName      String
+  status           String      @default("ACTIVE")
+  roleId           String
+  branchId         String
+  employeeId       String?     @unique
+  role             Role        @relation(fields: [roleId], references: [id])
+  branch           Branch      @relation(fields: [branchId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee         Employee?   @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  name        String
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  sku             String          @unique
+  name            String
+  barcode         String?         @unique
+  salePrice       Decimal         @db.Decimal(18, 2)
+  costPrice       Decimal         @db.Decimal(18, 2)
+  stockOnHand     Decimal         @default(0) @db.Decimal(18, 3)
+  reorderLevel    Decimal         @default(0) @db.Decimal(18, 3)
+  unitName        String          @default("قطعة")
+  isActive        Boolean         @default(true)
+  branchId        String
+  categoryId      String
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  category        ProductCategory @relation(fields: [categoryId], references: [id])
+  invoiceItems    SalesInvoiceItem[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Customer {
+  id            String         @id @default(uuid())
+  code          String         @unique
+  name          String
+  phone         String?
+  email         String?
+  address       String?
+  creditLimit   Decimal        @default(0) @db.Decimal(18, 2)
+  isActive      Boolean        @default(true)
+  salesInvoices SalesInvoice[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Supplier {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  name          String
+  phone         String?
+  email         String?
+  address       String?
+  taxNumber     String?
+  paymentTerms  String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Attachment {
+  id              String    @id @default(uuid())
+  ownerType       String    @default("GENERAL")
+  ownerId         String?
+  purpose         String?
+  originalName    String
+  storedFileName  String              @unique
+  relativePath    String              @unique
+  mimeType        String
+  byteSize        Int
+  uploadedByUser  String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([ownerType, ownerId])
+}
+
+model SalesInvoice {
+  id              String            @id @default(uuid())
+  invoiceNumber   String            @unique
+  branchId        String
+  customerId      String?
+  createdByUserId String?
+  subtotal        Decimal           @db.Decimal(18, 2)
+  discount        Decimal           @default(0) @db.Decimal(18, 2)
+  tax             Decimal           @default(0) @db.Decimal(18, 2)
+  total           Decimal           @db.Decimal(18, 2)
+  paymentMethod   String            @default("CASH")
+  status          String            @default("COMPLETED")
+  note            String?
+  branch          Branch            @relation(fields: [branchId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items           SalesInvoiceItem[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([branchId, createdAt])
+}
+
+model SalesInvoiceItem {
+  id             String       @id @default(uuid())
+  salesInvoiceId String
+  productId      String
+  productName    String
+  unitPrice      Decimal      @db.Decimal(18, 2)
+  quantity       Decimal      @db.Decimal(18, 3)
+  lineTotal      Decimal      @db.Decimal(18, 2)
+  salesInvoice   SalesInvoice @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt      DateTime     @default(now())
+
+  @@index([salesInvoiceId])
+  @@index([productId])
+}
